@@ -19,6 +19,7 @@ package framework
 import (
 	"context"
 	"fmt"
+	"slices"
 	"sort"
 	"sync"
 
@@ -211,6 +212,13 @@ func openSession(cache cache.Cache) *Session {
 	ssn.NamespaceInfo = snapshot.NamespaceInfo
 	// calculate all nodes' resource only once in each schedule cycle, other plugins can clone it when need
 	for _, n := range ssn.Nodes {
+		status := getNodeStatus(n.Node)
+
+		if len(status) != 0 || (len(status) == 0 && !slices.Contains(status, string(v1.NodeReady))) {
+			klog.V(3).Infof("node %s is not ready,need continue", n.Name)
+			continue
+		}
+
 		ssn.TotalResource.Add(n.Allocatable)
 	}
 
@@ -220,6 +228,35 @@ func openSession(cache cache.Cache) *Session {
 		ssn.UID, len(ssn.Jobs), len(ssn.Queues))
 
 	return ssn
+}
+
+func getNodeStatus(obj *v1.Node) []string {
+
+	conditionMap := make(map[v1.NodeConditionType]*v1.NodeCondition)
+	NodeAllConditions := []v1.NodeConditionType{v1.NodeReady}
+	for i := range obj.Status.Conditions {
+		cond := obj.Status.Conditions[i]
+		conditionMap[cond.Type] = &cond
+	}
+
+	var status []string
+	for _, validCondition := range NodeAllConditions {
+		if condition, ok := conditionMap[validCondition]; ok {
+			if condition.Status == v1.ConditionTrue {
+				status = append(status, string(condition.Type))
+			} else {
+				status = append(status, "Not"+string(condition.Type))
+			}
+		}
+	}
+	if len(status) == 0 {
+		status = append(status, "Unknown")
+	}
+	if obj.Spec.Unschedulable {
+		status = append(status, "SchedulingDisabled")
+	}
+
+	return status
 }
 
 func (ssn *Session) parseHyperNodesTiers() {
