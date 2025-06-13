@@ -19,7 +19,6 @@ package framework
 import (
 	"context"
 	"fmt"
-	"slices"
 	"sort"
 	"sync"
 
@@ -227,38 +226,6 @@ func openSession(cache cache.Cache) *Session {
 		ssn.UID, len(ssn.Jobs), len(ssn.Queues))
 
 	return ssn
-}
-
-func nodeIsNotReady(obj *v1.Node) bool {
-	conditionMap := make(map[v1.NodeConditionType]*v1.NodeCondition)
-	NodeAllConditions := []v1.NodeConditionType{v1.NodeReady}
-	for i := range obj.Status.Conditions {
-		cond := obj.Status.Conditions[i]
-		conditionMap[cond.Type] = &cond
-	}
-
-	var status []string
-	for _, validCondition := range NodeAllConditions {
-		if condition, ok := conditionMap[validCondition]; ok {
-			if condition.Status == v1.ConditionTrue {
-				status = append(status, string(condition.Type))
-			} else {
-				status = append(status, "Not"+string(condition.Type))
-			}
-		}
-	}
-	if len(status) == 0 {
-		status = append(status, "Unknown")
-	}
-	if obj.Spec.Unschedulable {
-		status = append(status, "SchedulingDisabled")
-	}
-
-	if len(status) != 1 || (len(status) == 1 && !slices.Contains(status, string(v1.NodeReady))) {
-		return false
-	}
-
-	return true
 }
 
 func (ssn *Session) parseHyperNodesTiers() {
