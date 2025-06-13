@@ -11,7 +11,7 @@ func TestGetNodeStatus(t *testing.T) {
 	tests := []struct {
 		name     string
 		node     *v1.Node
-		expected []string
+		expected bool
 	}{
 		{
 			name: "no conditions",
@@ -20,7 +20,7 @@ func TestGetNodeStatus(t *testing.T) {
 				Status:     v1.NodeStatus{},
 				Spec:       v1.NodeSpec{},
 			},
-			expected: []string{"Unknown"},
+			expected: false,
 		},
 		{
 			name: "ready",
@@ -33,7 +33,7 @@ func TestGetNodeStatus(t *testing.T) {
 				},
 				Spec: v1.NodeSpec{},
 			},
-			expected: []string{"Ready"},
+			expected: false,
 		},
 		{
 			name: "not ready",
@@ -46,7 +46,7 @@ func TestGetNodeStatus(t *testing.T) {
 				},
 				Spec: v1.NodeSpec{},
 			},
-			expected: []string{"NotReady"},
+			expected: false,
 		},
 		{
 			name: "ready and unschedulable",
@@ -61,7 +61,7 @@ func TestGetNodeStatus(t *testing.T) {
 					Unschedulable: true,
 				},
 			},
-			expected: []string{"Ready", "SchedulingDisabled"},
+			expected: false,
 		},
 		{
 			name: "unknown and unschedulable",
@@ -72,7 +72,7 @@ func TestGetNodeStatus(t *testing.T) {
 					Unschedulable: true,
 				},
 			},
-			expected: []string{"Unknown", "SchedulingDisabled"},
+			expected: false,
 		},
 		{
 			name: "not ready and unschedulable",
@@ -87,7 +87,7 @@ func TestGetNodeStatus(t *testing.T) {
 					Unschedulable: true,
 				},
 			},
-			expected: []string{"NotReady", "SchedulingDisabled"},
+			expected: false,
 		},
 		{
 			name: "multiple conditions including ready",
@@ -101,7 +101,7 @@ func TestGetNodeStatus(t *testing.T) {
 				},
 				Spec: v1.NodeSpec{},
 			},
-			expected: []string{"Ready"},
+			expected: false,
 		},
 		{
 			name: "multiple conditions without ready",
@@ -115,13 +115,13 @@ func TestGetNodeStatus(t *testing.T) {
 				},
 				Spec: v1.NodeSpec{},
 			},
-			expected: []string{"Unknown"},
+			expected: false,
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			result := getNodeStatus(tt.node)
+			result := nodeIsNotReady(tt.node)
 			assert.Equal(t, tt.expected, result)
 		})
 	}

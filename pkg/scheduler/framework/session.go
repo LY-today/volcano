@@ -212,9 +212,8 @@ func openSession(cache cache.Cache) *Session {
 	ssn.NamespaceInfo = snapshot.NamespaceInfo
 	// calculate all nodes' resource only once in each schedule cycle, other plugins can clone it when need
 	for _, n := range ssn.Nodes {
-		status := getNodeStatus(n.Node)
 
-		if len(status) != 0 || (len(status) == 1 && !slices.Contains(status, string(v1.NodeReady))) {
+		if !nodeIsNotReady(n.Node) {
 			klog.V(3).Infof("node %s is not ready,need continue", n.Name)
 			continue
 		}
@@ -230,7 +229,7 @@ func openSession(cache cache.Cache) *Session {
 	return ssn
 }
 
-func getNodeStatus(obj *v1.Node) []string {
+func nodeIsNotReady(obj *v1.Node) bool {
 	conditionMap := make(map[v1.NodeConditionType]*v1.NodeCondition)
 	NodeAllConditions := []v1.NodeConditionType{v1.NodeReady}
 	for i := range obj.Status.Conditions {
@@ -255,7 +254,11 @@ func getNodeStatus(obj *v1.Node) []string {
 		status = append(status, "SchedulingDisabled")
 	}
 
-	return status
+	if len(status) != 0 || (len(status) == 0 && !slices.Contains(status, string(v1.NodeReady))) {
+		return false
+	}
+
+	return true
 }
 
 func (ssn *Session) parseHyperNodesTiers() {
