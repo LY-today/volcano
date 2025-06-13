@@ -254,7 +254,7 @@ func nodeIsNotReady(obj *v1.Node) bool {
 		status = append(status, "SchedulingDisabled")
 	}
 
-	if len(status) != 0 || (len(status) == 0 && !slices.Contains(status, string(v1.NodeReady))) {
+	if len(status) != 1 || (len(status) == 1 && !slices.Contains(status, string(v1.NodeReady))) {
 		return false
 	}
 

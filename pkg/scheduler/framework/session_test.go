@@ -33,7 +33,7 @@ func TestGetNodeStatus(t *testing.T) {
 				},
 				Spec: v1.NodeSpec{},
 			},
-			expected: false,
+			expected: true,
 		},
 		{
 			name: "not ready",
@@ -101,7 +101,7 @@ func TestGetNodeStatus(t *testing.T) {
 				},
 				Spec: v1.NodeSpec{},
 			},
-			expected: false,
+			expected: true,
 		},
 		{
 			name: "multiple conditions without ready",
