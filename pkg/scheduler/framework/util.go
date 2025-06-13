@@ -17,12 +17,13 @@ limitations under the License.
 package framework
 
 import (
+	"slices"
+
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/klog/v2"
 	k8sframework "k8s.io/kubernetes/pkg/scheduler/framework"
-	"slices"
 
 	"volcano.sh/volcano/pkg/scheduler/api"
 )
